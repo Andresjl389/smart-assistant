@@ -1,0 +1,54 @@
+# Secretos y credenciales
+.env
+.env.*
+!.env.example
+credentials.json
+token.json
+client_secret*.json
+*service-account*.json
+*.pem
+*.key
+
+# Base de datos local
+.data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Entornos virtuales
+.venv
+venv/
+env/
+
+# Herramientas
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Claude Code
+.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# Logs y temporales
+*.log
+tmp/
