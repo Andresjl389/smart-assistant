@@ -1,0 +1,22 @@
+[project]
+name = "smart-assitant"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi[standard]>=0.139.2",
+    "google-api-python-client>=2.198.0",
+    "google-auth>=2.56.0",
+    "google-auth-oauthlib>=1.4.0",
+    "google-genai>=2.11.0",
+    "pydantic-settings>=2.14.2",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.15.22",
+]
