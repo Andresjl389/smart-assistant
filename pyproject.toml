@@ -5,12 +5,20 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "aiosqlite>=0.22.1",
+    "alembic>=1.18.5",
     "fastapi[standard]>=0.139.2",
     "google-api-python-client>=2.198.0",
     "google-auth>=2.56.0",
     "google-auth-oauthlib>=1.4.0",
     "google-genai>=2.11.0",
     "pydantic-settings>=2.14.2",
+    "sqlalchemy[asyncio]>=2.0",
+]
+
+[project.optional-dependencies]
+postgres = [
+    "asyncpg>=0.31.0",
 ]
 
 [dependency-groups]

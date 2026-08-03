@@ -24,11 +24,37 @@ class Settings(BaseSettings):
     GOOGLE_PROJECT_ID: str
     PUBSUB_TOPIC: str
     GMAIL_STATE_FILE: str = ".data/gmail_state.json"
+    DATABASE_URL: str = "sqlite+aiosqlite:///.data/smart_assistant.db"
+    DB_ECHO: bool = False
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_RECYCLE: int = 1800
+    CORS_ORIGINS: str = "*"
+    CORS_ALLOW_CREDENTIALS: bool = False
+    CORS_ALLOW_METHODS: str = "*"
+    CORS_ALLOW_HEADERS: str = "*"
+    CORS_MAX_AGE: int = 600
 
     model_config = SettingsConfigDict(
         env_file='.env',
         extra='ignore'
     )
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return self._split(self.CORS_ORIGINS)
+
+    @property
+    def cors_allow_methods(self) -> list[str]:
+        return self._split(self.CORS_ALLOW_METHODS)
+
+    @property
+    def cors_allow_headers(self) -> list[str]:
+        return self._split(self.CORS_ALLOW_HEADERS)
+
+    @staticmethod
+    def _split(value: str) -> list[str]:
+        return [item.strip() for item in value.split(",") if item.strip()]
 
     @property
     def gemini_api_key(self) -> str:
