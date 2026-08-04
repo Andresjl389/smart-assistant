@@ -7,6 +7,7 @@ requires-python = ">=3.14"
 dependencies = [
     "aiosqlite>=0.22.1",
     "alembic>=1.18.5",
+    "asyncpg>=0.31.0",
     "fastapi[standard]>=0.139.2",
     "google-api-python-client>=2.198.0",
     "google-auth>=2.56.0",
@@ -17,9 +18,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-postgres = [
-    "asyncpg>=0.31.0",
-]
+postgres = []
 
 [dependency-groups]
 dev = [

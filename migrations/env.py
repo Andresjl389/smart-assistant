@@ -1,11 +1,15 @@
 import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy.engine import Connection, make_url
+from sqlalchemy.engine import Connection
 
 from alembic import context
 
-from app.infrastructure.persistence.database import build_engine, is_sqlite
+from app.infrastructure.persistence.database import (
+    build_engine,
+    is_sqlite,
+    normalize_database_url,
+)
 from app.infrastructure.persistence.models import Base
 from app.infrastructure.persistence.types import UtcDateTime
 from app.shared.config.settings import settings
@@ -38,14 +42,14 @@ def _context_options() -> dict:
         "target_metadata": target_metadata,
         "compare_type": True,
         "compare_server_default": True,
-        "render_as_batch": is_sqlite(make_url(settings.DATABASE_URL)),
+        "render_as_batch": is_sqlite(normalize_database_url(settings.DATABASE_URL)),
         "render_item": render_item,
     }
 
 
 def run_migrations_offline() -> None:
     context.configure(
-        url=settings.DATABASE_URL,
+        url=normalize_database_url(settings.DATABASE_URL),
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         **_context_options(),
