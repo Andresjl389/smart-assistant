@@ -1,0 +1,50 @@
+# El .venv local es de macOS: si se copiara, sobrescribiria el que
+# instala uv dentro del contenedor y los binarios no ejecutarian.
+.venv
+venv/
+env/
+
+# Secretos: nunca deben quedar dentro de la imagen.
+.env
+.env.*
+credentials.json
+token.json
+client_secret*.json
+*service-account*.json
+*.pem
+*.key
+
+# Datos locales
+.data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Artefactos de Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Control de versiones y editores
+.git
+.gitignore
+.github
+.vscode/
+.idea/
+.claude/
+
+# Otros
+.DS_Store
+*.log
+README.md

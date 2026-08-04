@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Smart Assistant"
     APP_VERSION: str = '0.1.0'
 
-    API_KEY: str
+    API_KEY: str | None = None
     AI_PROVIDER: str = "openrouter"
     AI_BATCH_SIZE: int = 20
     AI_RULES_PREFILTER: bool = True
@@ -58,11 +58,28 @@ class Settings(BaseSettings):
 
     @property
     def gemini_api_key(self) -> str:
-        return self.GEMINI_API_KEY or self.API_KEY
+        return self._require_key(
+            self.GEMINI_API_KEY,
+            "GEMINI_API_KEY",
+        )
 
     @property
     def openrouter_api_key(self) -> str:
-        return self.OPENROUTER_API_KEY or self.API_KEY
+        return self._require_key(
+            self.OPENROUTER_API_KEY,
+            "OPENROUTER_API_KEY",
+        )
+
+    def _require_key(self, value: str | None, name: str) -> str:
+        key = value or self.API_KEY
+
+        if not key:
+            raise ValueError(
+                f"Falta {name} (o API_KEY como respaldo) para usar "
+                f"AI_PROVIDER={self.AI_PROVIDER}.",
+            )
+
+        return key
 
 @lru_cache()
 def get_settings() -> Settings:
