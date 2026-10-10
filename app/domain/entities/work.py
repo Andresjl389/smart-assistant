@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Self
+from uuid import UUID
 
 
 SECONDS_PER_MINUTE = 60
@@ -13,7 +14,7 @@ class WorkSession:
     ended_at: datetime | None = None
     minutes: int | None = None
     note: str | None = None
-    id: int | None = None
+    id: UUID | None = None
 
     @property
     def is_open(self) -> bool:

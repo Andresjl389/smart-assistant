@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from app.domain.value_objects.account_type import AccountType
 from app.domain.value_objects.movement_type import MovementType
@@ -13,7 +14,7 @@ class Account:
     currency: str = "COP"
     initial_balance: Decimal = Decimal(0)
     is_active: bool = True
-    id: int | None = None
+    id: UUID | None = None
 
 
 @dataclass(slots=True)
@@ -26,7 +27,7 @@ class AccountBalance:
 class Category:
     name: str
     is_active: bool = True
-    id: int | None = None
+    id: UUID | None = None
 
 
 @dataclass(slots=True)
@@ -34,12 +35,12 @@ class Movement:
     type: MovementType
     amount: Decimal
     occurred_at: datetime
-    account_id: int
-    counter_account_id: int | None = None
+    account_id: UUID
+    counter_account_id: UUID | None = None
     currency: str = "COP"
     description: str | None = None
-    category_id: int | None = None
-    id: int | None = None
+    category_id: UUID | None = None
+    id: UUID | None = None
 
     @property
     def is_transfer(self) -> bool:

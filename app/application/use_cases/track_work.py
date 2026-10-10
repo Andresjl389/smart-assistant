@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from uuid import UUID
 
 from app.application.dtos.work.work_dto import (
     WorkSessionStartDTO,
@@ -90,6 +91,6 @@ class TrackWorkUseCase:
             "sessions": len(sessions),
         }
 
-    async def delete_session(self, session_id: int) -> None:
+    async def delete_session(self, session_id: UUID) -> None:
         if not await self.work_session_repository.delete(session_id):
             raise NotFoundError(f"No existe la jornada {session_id}.")

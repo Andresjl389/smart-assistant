@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from sqlalchemy import case, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,31 +43,33 @@ OUTGOING_CENTS = case(
 
 class SqlAlchemyAccountRepository(AccountRepository):
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, user_id: UUID):
         self.session = session
+        self.user_id = user_id
 
     async def add(self, account: Account) -> Account:
         model = AccountMapper.to_model(account)
+        model.user_id = self.user_id
         self.session.add(model)
         await self.session.flush()
 
         return AccountMapper.to_domain(model)
 
-    async def get(self, account_id: int) -> Account | None:
-        model = await self.session.get(AccountModel, account_id)
+    async def get(self, account_id: UUID) -> Account | None:
+        model = await self.session.scalar(select(AccountModel).where(AccountModel.id == account_id, AccountModel.user_id == self.user_id))
 
         return AccountMapper.to_domain(model) if model else None
 
     async def get_by_name(self, name: str) -> Account | None:
         result = await self.session.execute(
-            select(AccountModel).where(AccountModel.name == name),
+            select(AccountModel).where(AccountModel.name == name, AccountModel.user_id == self.user_id),
         )
         model = result.scalar_one_or_none()
 
         return AccountMapper.to_domain(model) if model else None
 
     async def list(self, only_active: bool = False) -> list[Account]:
-        statement = select(AccountModel).order_by(AccountModel.name)
+        statement = select(AccountModel).where(AccountModel.user_id == self.user_id).order_by(AccountModel.name)
 
         if only_active:
             statement = statement.where(AccountModel.is_active.is_(True))
@@ -75,7 +78,7 @@ class SqlAlchemyAccountRepository(AccountRepository):
 
         return [AccountMapper.to_domain(model) for model in result.scalars()]
 
-    async def balance(self, account_id: int) -> Decimal:
+    async def balance(self, account_id: UUID) -> Decimal:
         account = await self.get(account_id)
 
         if account is None:
@@ -84,12 +87,14 @@ class SqlAlchemyAccountRepository(AccountRepository):
         own = await self.session.execute(
             select(func.sum(OUTGOING_CENTS)).where(
                 MovementModel.account_id == account_id,
+                MovementModel.user_id == self.user_id,
             ),
         )
         incoming = await self.session.execute(
             select(func.sum(MovementModel.amount_cents)).where(
                 MovementModel.counter_account_id == account_id,
                 MovementModel.type == MovementType.TRANSFER,
+                MovementModel.user_id == self.user_id,
             ),
         )
 
@@ -106,7 +111,7 @@ class SqlAlchemyAccountRepository(AccountRepository):
         accounts = await self.list(only_active=only_active)
 
         own_result = await self.session.execute(
-            select(MovementModel.account_id, func.sum(OUTGOING_CENTS)).group_by(
+            select(MovementModel.account_id, func.sum(OUTGOING_CENTS)).where(MovementModel.user_id == self.user_id).group_by(
                 MovementModel.account_id,
             ),
         )
@@ -116,6 +121,7 @@ class SqlAlchemyAccountRepository(AccountRepository):
                 func.sum(MovementModel.amount_cents),
             )
             .where(MovementModel.type == MovementType.TRANSFER)
+            .where(MovementModel.user_id == self.user_id)
             .group_by(MovementModel.counter_account_id),
         )
 
@@ -134,7 +140,7 @@ class SqlAlchemyAccountRepository(AccountRepository):
             for account in accounts
         ]
 
-    async def has_movements(self, account_id: int) -> bool:
+    async def has_movements(self, account_id: UUID) -> bool:
         result = await self.session.execute(
             select(func.count())
             .select_from(MovementModel)
@@ -143,14 +149,15 @@ class SqlAlchemyAccountRepository(AccountRepository):
                     MovementModel.account_id == account_id,
                     MovementModel.counter_account_id == account_id,
                 ),
+                MovementModel.user_id == self.user_id,
             ),
         )
 
         return (result.scalar() or 0) > 0
 
-    async def delete(self, account_id: int) -> bool:
+    async def delete(self, account_id: UUID) -> bool:
         result = await self.session.execute(
-            delete(AccountModel).where(AccountModel.id == account_id),
+            delete(AccountModel).where(AccountModel.id == account_id, AccountModel.user_id == self.user_id),
         )
 
         return result.rowcount > 0
@@ -158,31 +165,33 @@ class SqlAlchemyAccountRepository(AccountRepository):
 
 class SqlAlchemyCategoryRepository(CategoryRepository):
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, user_id: UUID):
         self.session = session
+        self.user_id = user_id
 
     async def add(self, category: Category) -> Category:
         model = CategoryMapper.to_model(category)
+        model.user_id = self.user_id
         self.session.add(model)
         await self.session.flush()
 
         return CategoryMapper.to_domain(model)
 
-    async def get(self, category_id: int) -> Category | None:
-        model = await self.session.get(CategoryModel, category_id)
+    async def get(self, category_id: UUID) -> Category | None:
+        model = await self.session.scalar(select(CategoryModel).where(CategoryModel.id == category_id, CategoryModel.user_id == self.user_id))
 
         return CategoryMapper.to_domain(model) if model else None
 
     async def get_by_name(self, name: str) -> Category | None:
         result = await self.session.execute(
-            select(CategoryModel).where(CategoryModel.name == name),
+            select(CategoryModel).where(CategoryModel.name == name, CategoryModel.user_id == self.user_id),
         )
         model = result.scalar_one_or_none()
 
         return CategoryMapper.to_domain(model) if model else None
 
     async def list(self, only_active: bool = False) -> list[Category]:
-        statement = select(CategoryModel).order_by(CategoryModel.name)
+        statement = select(CategoryModel).where(CategoryModel.user_id == self.user_id).order_by(CategoryModel.name)
 
         if only_active:
             statement = statement.where(CategoryModel.is_active.is_(True))
@@ -191,9 +200,9 @@ class SqlAlchemyCategoryRepository(CategoryRepository):
 
         return [CategoryMapper.to_domain(model) for model in result.scalars()]
 
-    async def delete(self, category_id: int) -> bool:
+    async def delete(self, category_id: UUID) -> bool:
         result = await self.session.execute(
-            delete(CategoryModel).where(CategoryModel.id == category_id),
+            delete(CategoryModel).where(CategoryModel.id == category_id, CategoryModel.user_id == self.user_id),
         )
 
         return result.rowcount > 0
@@ -201,18 +210,20 @@ class SqlAlchemyCategoryRepository(CategoryRepository):
 
 class SqlAlchemyMovementRepository(MovementRepository):
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, user_id: UUID):
         self.session = session
+        self.user_id = user_id
 
     async def add(self, movement: Movement) -> Movement:
         model = MovementMapper.to_model(movement)
+        model.user_id = self.user_id
         self.session.add(model)
         await self.session.flush()
 
         return MovementMapper.to_domain(model)
 
-    async def get(self, movement_id: int) -> Movement | None:
-        model = await self.session.get(MovementModel, movement_id)
+    async def get(self, movement_id: UUID) -> Movement | None:
+        model = await self.session.scalar(select(MovementModel).where(MovementModel.id == movement_id, MovementModel.user_id == self.user_id))
 
         return MovementMapper.to_domain(model) if model else None
 
@@ -221,8 +232,8 @@ class SqlAlchemyMovementRepository(MovementRepository):
         since: datetime | None = None,
         until: datetime | None = None,
         movement_type: MovementType | None = None,
-        category_id: int | None = None,
-        account_id: int | None = None,
+        category_id: UUID | None = None,
+        account_id: UUID | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[Movement]:
@@ -231,6 +242,7 @@ class SqlAlchemyMovementRepository(MovementRepository):
             .order_by(MovementModel.occurred_at.desc())
             .limit(limit)
             .offset(offset)
+            .where(MovementModel.user_id == self.user_id)
         )
 
         if movement_type is not None:
@@ -256,11 +268,12 @@ class SqlAlchemyMovementRepository(MovementRepository):
         self,
         since: datetime | None = None,
         until: datetime | None = None,
-        account_id: int | None = None,
+        account_id: UUID | None = None,
     ) -> MovementSummary:
         statement = (
             select(MovementModel.type, func.sum(MovementModel.amount_cents))
             .where(MovementModel.type != MovementType.TRANSFER)
+            .where(MovementModel.user_id == self.user_id)
             .group_by(MovementModel.type)
         )
 
@@ -276,9 +289,9 @@ class SqlAlchemyMovementRepository(MovementRepository):
             expense=to_amount(totals.get(MovementType.EXPENSE)),
         )
 
-    async def delete(self, movement_id: int) -> bool:
+    async def delete(self, movement_id: UUID) -> bool:
         result = await self.session.execute(
-            delete(MovementModel).where(MovementModel.id == movement_id),
+            delete(MovementModel).where(MovementModel.id == movement_id, MovementModel.user_id == self.user_id),
         )
 
         return result.rowcount > 0

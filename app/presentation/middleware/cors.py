@@ -17,7 +17,7 @@ def register_cors(app: FastAPI) -> None:
     allow_all = ANY_ORIGIN in origins
 
     options = {
-        "allow_credentials": settings.CORS_ALLOW_CREDENTIALS,
+        "allow_credentials": True,
         "allow_methods": settings.cors_allow_methods,
         "allow_headers": settings.cors_allow_headers,
         "expose_headers": ["*"],

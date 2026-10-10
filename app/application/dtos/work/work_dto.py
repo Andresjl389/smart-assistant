@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -21,7 +22,7 @@ class WorkSessionStopDTO(BaseModel):
 class WorkSessionDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: UUID
     started_at: datetime
     ended_at: datetime | None
     minutes: int | None

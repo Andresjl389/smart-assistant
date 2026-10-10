@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -28,7 +29,7 @@ class AccountCreateDTO(BaseModel):
 class AccountDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: UUID
     name: str
     type: AccountType
     currency: str
@@ -51,7 +52,7 @@ class CategoryCreateDTO(BaseModel):
 class CategoryDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: UUID
     name: str
     is_active: bool
 
@@ -59,10 +60,10 @@ class CategoryDTO(BaseModel):
 class MovementCreateDTO(BaseModel):
     type: MovementType
     amount: Decimal = Field(gt=0, max_digits=14, decimal_places=2)
-    account_id: int
+    account_id: UUID
     occurred_at: datetime | None = None
     description: str | None = Field(default=None, max_length=255)
-    category_id: int | None = None
+    category_id: UUID | None = None
 
     _check_timezone = field_validator("occurred_at")(require_timezone)
 
@@ -79,8 +80,8 @@ class MovementCreateDTO(BaseModel):
 
 class TransferCreateDTO(BaseModel):
     amount: Decimal = Field(gt=0, max_digits=14, decimal_places=2)
-    from_account_id: int
-    to_account_id: int
+    from_account_id: UUID
+    to_account_id: UUID
     occurred_at: datetime | None = None
     description: str | None = Field(default=None, max_length=255)
 
@@ -90,16 +91,16 @@ class TransferCreateDTO(BaseModel):
 class MovementDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: UUID
     type: MovementType
     amount: Decimal
     signed_amount: Decimal
     currency: str
     description: str | None
     occurred_at: datetime
-    account_id: int
-    counter_account_id: int | None
-    category_id: int | None
+    account_id: UUID
+    counter_account_id: UUID | None
+    category_id: UUID | None
 
 
 class MovementSummaryDTO(BaseModel):

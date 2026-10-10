@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
 from sqlalchemy import (
     BigInteger,
@@ -7,6 +8,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     String,
+    Uuid,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -35,7 +37,8 @@ class Movement(TimestampMixin, Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True)
     type: Mapped[MovementType] = mapped_column(
         Enum(MovementType, native_enum=False, name="movement_type", length=20),
         index=True,
@@ -47,16 +50,16 @@ class Movement(TimestampMixin, Base):
         UtcDateTime,
         index=True,
     )
-    account_id: Mapped[int] = mapped_column(
-        ForeignKey("accounts.id", ondelete="RESTRICT"),
+    account_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("accounts.id", ondelete="RESTRICT"),
         index=True,
     )
-    counter_account_id: Mapped[int | None] = mapped_column(
-        ForeignKey("accounts.id", ondelete="RESTRICT"),
+    counter_account_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("accounts.id", ondelete="RESTRICT"),
         index=True,
     )
-    category_id: Mapped[int | None] = mapped_column(
-        ForeignKey("categories.id", ondelete="SET NULL"),
+    category_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("categories.id", ondelete="SET NULL"),
         index=True,
     )
 

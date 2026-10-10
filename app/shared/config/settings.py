@@ -30,10 +30,15 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 10
     DB_POOL_RECYCLE: int = 1800
     CORS_ORIGINS: str = "*"
-    CORS_ALLOW_CREDENTIALS: bool = False
+    CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: str = "*"
     CORS_ALLOW_HEADERS: str = "*"
     CORS_MAX_AGE: int = 600
+    AUTH_COOKIE_NAME: str = "smart_assistant_session"
+    AUTH_SESSION_DAYS: int = 30
+    AUTH_COOKIE_SECURE: bool = True
+    GMAIL_WEBHOOK_AUDIENCE: str | None = None
+    GMAIL_WEBHOOK_SERVICE_ACCOUNT: str | None = None
 
     model_config = SettingsConfigDict(
         env_file='.env',

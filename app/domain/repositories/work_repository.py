@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+from uuid import UUID
 
 from app.domain.entities.work import WorkSession
 
@@ -11,7 +12,7 @@ class WorkSessionRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get(self, session_id: int) -> WorkSession | None:
+    async def get(self, session_id: UUID) -> WorkSession | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -41,5 +42,5 @@ class WorkSessionRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def delete(self, session_id: int) -> bool:
+    async def delete(self, session_id: UUID) -> bool:
         raise NotImplementedError

@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response, status
 
@@ -10,9 +11,10 @@ from app.application.dtos.work.work_dto import (
 )
 from app.application.use_cases.track_work import TrackWorkUseCase
 from app.presentation.api.dependencies.use_cases import get_track_work_use_case
+from app.presentation.api.dependencies.security import get_current_user
 
 
-router = APIRouter(prefix="/work", tags=["Horas trabajadas"])
+router = APIRouter(prefix="/work", tags=["Horas trabajadas"], dependencies=[Depends(get_current_user)])
 
 
 @router.post(
@@ -75,7 +77,7 @@ async def get_summary(
 
 @router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_session(
-    session_id: int,
+    session_id: UUID,
     use_case: TrackWorkUseCase = Depends(get_track_work_use_case),
 ):
     await use_case.delete_session(session_id)

@@ -1,4 +1,5 @@
 from fastapi import Depends
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.repositories.email_repository import EmailRepository
@@ -18,6 +19,7 @@ from app.infrastructure.persistence.repositories.sqlalchemy_work_repository impo
     SqlAlchemyWorkSessionRepository,
 )
 from app.presentation.api.dependencies.database import get_session
+from app.presentation.api.dependencies.security import get_authenticated_user_id
 
 
 def get_email_repository() -> EmailRepository:
@@ -26,23 +28,27 @@ def get_email_repository() -> EmailRepository:
 
 def get_category_repository(
     session: AsyncSession = Depends(get_session),
+    user_id: UUID = Depends(get_authenticated_user_id),
 ) -> CategoryRepository:
-    return SqlAlchemyCategoryRepository(session)
+    return SqlAlchemyCategoryRepository(session, user_id)
 
 
 def get_movement_repository(
     session: AsyncSession = Depends(get_session),
+    user_id: UUID = Depends(get_authenticated_user_id),
 ) -> MovementRepository:
-    return SqlAlchemyMovementRepository(session)
+    return SqlAlchemyMovementRepository(session, user_id)
 
 
 def get_work_session_repository(
     session: AsyncSession = Depends(get_session),
+    user_id: UUID = Depends(get_authenticated_user_id),
 ) -> WorkSessionRepository:
-    return SqlAlchemyWorkSessionRepository(session)
+    return SqlAlchemyWorkSessionRepository(session, user_id)
 
 
 def get_account_repository(
     session: AsyncSession = Depends(get_session),
+    user_id: UUID = Depends(get_authenticated_user_id),
 ) -> AccountRepository:
-    return SqlAlchemyAccountRepository(session)
+    return SqlAlchemyAccountRepository(session, user_id)

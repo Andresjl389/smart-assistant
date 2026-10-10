@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 
@@ -17,9 +18,10 @@ from app.application.dtos.finance.finance_dto import (
 from app.application.use_cases.manage_finance import ManageFinanceUseCase
 from app.domain.value_objects.movement_type import MovementType
 from app.presentation.api.dependencies.use_cases import get_manage_finance_use_case
+from app.presentation.api.dependencies.security import get_current_user
 
 
-router = APIRouter(prefix="/finance", tags=["Finanzas"])
+router = APIRouter(prefix="/finance", tags=["Finanzas"], dependencies=[Depends(get_current_user)])
 
 
 @router.post(
@@ -52,7 +54,7 @@ async def list_account_balances(
 
 @router.get("/accounts/{account_id}/balance", response_model=Decimal)
 async def get_account_balance(
-    account_id: int,
+    account_id: UUID,
     use_case: ManageFinanceUseCase = Depends(get_manage_finance_use_case),
 ):
     return await use_case.get_account_balance(account_id)
@@ -60,7 +62,7 @@ async def get_account_balance(
 
 @router.delete("/accounts/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_account(
-    account_id: int,
+    account_id: UUID,
     use_case: ManageFinanceUseCase = Depends(get_manage_finance_use_case),
 ):
     await use_case.delete_account(account_id)
@@ -88,7 +90,7 @@ async def list_categories(
 
 @router.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category(
-    category_id: int,
+    category_id: UUID,
     use_case: ManageFinanceUseCase = Depends(get_manage_finance_use_case),
 ):
     await use_case.delete_category(category_id)
@@ -123,8 +125,8 @@ async def list_movements(
     since: datetime | None = None,
     until: datetime | None = None,
     movement_type: MovementType | None = None,
-    category_id: int | None = None,
-    account_id: int | None = None,
+    category_id: UUID | None = None,
+    account_id: UUID | None = None,
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
     use_case: ManageFinanceUseCase = Depends(get_manage_finance_use_case),
@@ -144,7 +146,7 @@ async def list_movements(
 async def get_summary(
     since: datetime | None = None,
     until: datetime | None = None,
-    account_id: int | None = None,
+    account_id: UUID | None = None,
     use_case: ManageFinanceUseCase = Depends(get_manage_finance_use_case),
 ):
     return await use_case.get_summary(
@@ -156,7 +158,7 @@ async def get_summary(
 
 @router.delete("/movements/{movement_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_movement(
-    movement_id: int,
+    movement_id: UUID,
     use_case: ManageFinanceUseCase = Depends(get_manage_finance_use_case),
 ):
     await use_case.delete_movement(movement_id)

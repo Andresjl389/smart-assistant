@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from app.domain.entities.finance import (
     Account,
@@ -19,7 +20,7 @@ class AccountRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get(self, account_id: int) -> Account | None:
+    async def get(self, account_id: UUID) -> Account | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -31,7 +32,7 @@ class AccountRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def balance(self, account_id: int) -> Decimal:
+    async def balance(self, account_id: UUID) -> Decimal:
         raise NotImplementedError
 
     @abstractmethod
@@ -42,11 +43,11 @@ class AccountRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def has_movements(self, account_id: int) -> bool:
+    async def has_movements(self, account_id: UUID) -> bool:
         raise NotImplementedError
 
     @abstractmethod
-    async def delete(self, account_id: int) -> bool:
+    async def delete(self, account_id: UUID) -> bool:
         raise NotImplementedError
 
 
@@ -57,7 +58,7 @@ class CategoryRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get(self, category_id: int) -> Category | None:
+    async def get(self, category_id: UUID) -> Category | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -69,7 +70,7 @@ class CategoryRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def delete(self, category_id: int) -> bool:
+    async def delete(self, category_id: UUID) -> bool:
         raise NotImplementedError
 
 
@@ -80,7 +81,7 @@ class MovementRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get(self, movement_id: int) -> Movement | None:
+    async def get(self, movement_id: UUID) -> Movement | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -89,8 +90,8 @@ class MovementRepository(ABC):
         since: datetime | None = None,
         until: datetime | None = None,
         movement_type: MovementType | None = None,
-        category_id: int | None = None,
-        account_id: int | None = None,
+        category_id: UUID | None = None,
+        account_id: UUID | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[Movement]:
@@ -101,10 +102,10 @@ class MovementRepository(ABC):
         self,
         since: datetime | None = None,
         until: datetime | None = None,
-        account_id: int | None = None,
+        account_id: UUID | None = None,
     ) -> MovementSummary:
         raise NotImplementedError
 
     @abstractmethod
-    async def delete(self, movement_id: int) -> bool:
+    async def delete(self, movement_id: UUID) -> bool:
         raise NotImplementedError

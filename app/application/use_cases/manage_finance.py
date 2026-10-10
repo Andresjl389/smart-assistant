@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from uuid import UUID
 
 from app.application.dtos.finance.finance_dto import (
     AccountCreateDTO,
@@ -64,12 +65,12 @@ class ManageFinanceUseCase:
             only_active=only_active,
         )
 
-    async def get_account_balance(self, account_id: int) -> Decimal:
+    async def get_account_balance(self, account_id: UUID) -> Decimal:
         await self._require_account(account_id)
 
         return await self.account_repository.balance(account_id)
 
-    async def delete_account(self, account_id: int) -> None:
+    async def delete_account(self, account_id: UUID) -> None:
         await self._require_account(account_id)
 
         if await self.account_repository.has_movements(account_id):
@@ -91,7 +92,7 @@ class ManageFinanceUseCase:
     async def list_categories(self, only_active: bool = False) -> list[Category]:
         return await self.category_repository.list(only_active=only_active)
 
-    async def delete_category(self, category_id: int) -> None:
+    async def delete_category(self, category_id: UUID) -> None:
         if not await self.category_repository.delete(category_id):
             raise NotFoundError(f"No existe la categoria {category_id}.")
 
@@ -146,8 +147,8 @@ class ManageFinanceUseCase:
         since: datetime | None = None,
         until: datetime | None = None,
         movement_type: MovementType | None = None,
-        category_id: int | None = None,
-        account_id: int | None = None,
+        category_id: UUID | None = None,
+        account_id: UUID | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[Movement]:
@@ -165,7 +166,7 @@ class ManageFinanceUseCase:
         self,
         since: datetime | None = None,
         until: datetime | None = None,
-        account_id: int | None = None,
+        account_id: UUID | None = None,
     ) -> MovementSummary:
         return await self.movement_repository.summary(
             since=since,
@@ -173,11 +174,11 @@ class ManageFinanceUseCase:
             account_id=account_id,
         )
 
-    async def delete_movement(self, movement_id: int) -> None:
+    async def delete_movement(self, movement_id: UUID) -> None:
         if not await self.movement_repository.delete(movement_id):
             raise NotFoundError(f"No existe el movimiento {movement_id}.")
 
-    async def _require_account(self, account_id: int) -> Account:
+    async def _require_account(self, account_id: UUID) -> Account:
         account = await self.account_repository.get(account_id)
 
         if account is None:

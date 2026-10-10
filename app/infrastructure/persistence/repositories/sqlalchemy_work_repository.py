@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,25 +14,27 @@ from app.infrastructure.persistence.models.work.work_session import (
 
 class SqlAlchemyWorkSessionRepository(WorkSessionRepository):
 
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, user_id: UUID):
         self.session = session
+        self.user_id = user_id
 
     async def add(self, work_session: WorkSession) -> WorkSession:
         model = WorkSessionMapper.to_model(work_session)
+        model.user_id = self.user_id
         self.session.add(model)
         await self.session.flush()
 
         return WorkSessionMapper.to_domain(model)
 
-    async def get(self, session_id: int) -> WorkSession | None:
-        model = await self.session.get(WorkSessionModel, session_id)
+    async def get(self, session_id: UUID) -> WorkSession | None:
+        model = await self.session.scalar(select(WorkSessionModel).where(WorkSessionModel.id == session_id, WorkSessionModel.user_id == self.user_id))
 
         return WorkSessionMapper.to_domain(model) if model else None
 
     async def get_open(self) -> WorkSession | None:
         result = await self.session.execute(
             select(WorkSessionModel)
-            .where(WorkSessionModel.ended_at.is_(None))
+            .where(WorkSessionModel.ended_at.is_(None), WorkSessionModel.user_id == self.user_id)
             .order_by(WorkSessionModel.started_at.desc())
             .limit(1),
         )
@@ -40,7 +43,7 @@ class SqlAlchemyWorkSessionRepository(WorkSessionRepository):
         return WorkSessionMapper.to_domain(model) if model else None
 
     async def update(self, work_session: WorkSession) -> WorkSession | None:
-        model = await self.session.get(WorkSessionModel, work_session.id)
+        model = await self.session.scalar(select(WorkSessionModel).where(WorkSessionModel.id == work_session.id, WorkSessionModel.user_id == self.user_id))
 
         if model is None:
             return None
@@ -65,6 +68,7 @@ class SqlAlchemyWorkSessionRepository(WorkSessionRepository):
             .order_by(WorkSessionModel.started_at.desc())
             .limit(limit)
             .offset(offset)
+            .where(WorkSessionModel.user_id == self.user_id)
         )
 
         statement = self._apply_period(statement, since, until)
@@ -77,15 +81,15 @@ class SqlAlchemyWorkSessionRepository(WorkSessionRepository):
         since: datetime | None = None,
         until: datetime | None = None,
     ) -> int:
-        statement = select(func.sum(WorkSessionModel.minutes))
+        statement = select(func.sum(WorkSessionModel.minutes)).where(WorkSessionModel.user_id == self.user_id)
         statement = self._apply_period(statement, since, until)
         result = await self.session.execute(statement)
 
         return result.scalar() or 0
 
-    async def delete(self, session_id: int) -> bool:
+    async def delete(self, session_id: UUID) -> bool:
         result = await self.session.execute(
-            delete(WorkSessionModel).where(WorkSessionModel.id == session_id),
+            delete(WorkSessionModel).where(WorkSessionModel.id == session_id, WorkSessionModel.user_id == self.user_id),
         )
 
         return result.rowcount > 0
