@@ -1,12 +1,21 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.entities.work import WorkSession
-from app.domain.repositories.work_repository import WorkSessionRepository
-from app.infrastructure.persistence.mappers.work_mapper import WorkSessionMapper
+from app.domain.entities.work import WorkPreferences, WorkSession
+from app.domain.repositories.work_repository import (
+    WorkPreferencesRepository,
+    WorkSessionRepository,
+)
+from app.infrastructure.persistence.mappers.work_mapper import (
+    WorkPreferencesMapper,
+    WorkSessionMapper,
+)
+from app.infrastructure.persistence.models.work.work_preferences import (
+    WorkPreferences as WorkPreferencesModel,
+)
 from app.infrastructure.persistence.models.work.work_session import (
     WorkSession as WorkSessionModel,
 )
@@ -51,6 +60,7 @@ class SqlAlchemyWorkSessionRepository(WorkSessionRepository):
         model.started_at = work_session.started_at
         model.ended_at = work_session.ended_at
         model.minutes = work_session.minutes
+        model.break_minutes = work_session.break_minutes
         model.note = work_session.note
         await self.session.flush()
 
@@ -87,6 +97,35 @@ class SqlAlchemyWorkSessionRepository(WorkSessionRepository):
 
         return result.scalar() or 0
 
+    async def find_overlapping(
+        self,
+        started_at: datetime,
+        ended_at: datetime | None,
+        exclude_id: UUID | None = None,
+    ) -> WorkSession | None:
+        statement = (
+            select(WorkSessionModel)
+            .where(
+                WorkSessionModel.user_id == self.user_id,
+                or_(
+                    WorkSessionModel.ended_at.is_(None),
+                    WorkSessionModel.ended_at > started_at,
+                ),
+            )
+            .order_by(WorkSessionModel.started_at)
+            .limit(1)
+        )
+
+        if ended_at is not None:
+            statement = statement.where(WorkSessionModel.started_at < ended_at)
+
+        if exclude_id is not None:
+            statement = statement.where(WorkSessionModel.id != exclude_id)
+
+        model = await self.session.scalar(statement)
+
+        return WorkSessionMapper.to_domain(model) if model else None
+
     async def delete(self, session_id: UUID) -> bool:
         result = await self.session.execute(
             delete(WorkSessionModel).where(WorkSessionModel.id == session_id, WorkSessionModel.user_id == self.user_id),
@@ -107,3 +146,31 @@ class SqlAlchemyWorkSessionRepository(WorkSessionRepository):
             statement = statement.where(WorkSessionModel.started_at <= until)
 
         return statement
+
+
+class SqlAlchemyWorkPreferencesRepository(WorkPreferencesRepository):
+
+    def __init__(self, session: AsyncSession, user_id: UUID):
+        self.session = session
+        self.user_id = user_id
+
+    async def get(self) -> WorkPreferences | None:
+        model = await self.session.get(WorkPreferencesModel, self.user_id)
+
+        return WorkPreferencesMapper.to_domain(model) if model else None
+
+    async def save(self, preferences: WorkPreferences) -> WorkPreferences:
+        model = await self.session.get(WorkPreferencesModel, self.user_id)
+
+        if model is None:
+            model = WorkPreferencesModel(user_id=self.user_id)
+            self.session.add(model)
+
+        model.weekly_target_minutes = preferences.weekly_target_minutes
+        model.timezone = preferences.timezone
+        model.work_days = WorkPreferencesMapper.serialize_work_days(
+            preferences.work_days,
+        )
+        await self.session.flush()
+
+        return WorkPreferencesMapper.to_domain(model)

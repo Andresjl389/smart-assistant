@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     AUTH_COOKIE_SECURE: bool = True
     GMAIL_WEBHOOK_AUDIENCE: str | None = None
     GMAIL_WEBHOOK_SERVICE_ACCOUNT: str | None = None
+    # Valores por defecto del registro de horas; cada usuario puede cambiarlos
+    # en PATCH /work/preferences. 42 h es la jornada maxima legal en Colombia
+    # desde el 15 de julio de 2026 (Ley 2101 de 2021).
+    WORK_WEEKLY_TARGET_HOURS: float = 42
+    WORK_TIMEZONE: str = "America/Bogota"
+    WORK_DAYS: str = "1,2,3,4,5"
 
     model_config = SettingsConfigDict(
         env_file='.env',
@@ -56,6 +62,10 @@ class Settings(BaseSettings):
     @property
     def cors_allow_headers(self) -> list[str]:
         return self._split(self.CORS_ALLOW_HEADERS)
+
+    @property
+    def work_days(self) -> tuple[int, ...]:
+        return tuple(int(day) for day in self._split(self.WORK_DAYS))
 
     @staticmethod
     def _split(value: str) -> list[str]:

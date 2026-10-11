@@ -8,7 +8,10 @@ from app.domain.repositories.finance_repository import (
     CategoryRepository,
     MovementRepository,
 )
-from app.domain.repositories.work_repository import WorkSessionRepository
+from app.domain.repositories.work_repository import (
+    WorkPreferencesRepository,
+    WorkSessionRepository,
+)
 from app.infrastructure.gmail.gmail_repository import GmailRepository
 from app.infrastructure.persistence.repositories.sqlalchemy_finance_repository import (
     SqlAlchemyAccountRepository,
@@ -16,6 +19,7 @@ from app.infrastructure.persistence.repositories.sqlalchemy_finance_repository i
     SqlAlchemyMovementRepository,
 )
 from app.infrastructure.persistence.repositories.sqlalchemy_work_repository import (
+    SqlAlchemyWorkPreferencesRepository,
     SqlAlchemyWorkSessionRepository,
 )
 from app.presentation.api.dependencies.database import get_session
@@ -45,6 +49,13 @@ def get_work_session_repository(
     user_id: UUID = Depends(get_authenticated_user_id),
 ) -> WorkSessionRepository:
     return SqlAlchemyWorkSessionRepository(session, user_id)
+
+
+def get_work_preferences_repository(
+    session: AsyncSession = Depends(get_session),
+    user_id: UUID = Depends(get_authenticated_user_id),
+) -> WorkPreferencesRepository:
+    return SqlAlchemyWorkPreferencesRepository(session, user_id)
 
 
 def get_account_repository(

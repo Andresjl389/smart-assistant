@@ -20,6 +20,10 @@ class WorkSession(TimestampMixin, Base):
             "minutes IS NULL OR minutes >= 0",
             name="minutes_not_negative",
         ),
+        CheckConstraint(
+            "break_minutes >= 0",
+            name="break_minutes_not_negative",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
@@ -31,6 +35,7 @@ class WorkSession(TimestampMixin, Base):
     )
     ended_at: Mapped[datetime | None] = mapped_column(UtcDateTime)
     minutes: Mapped[int | None] = mapped_column(Integer)
+    break_minutes: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     note: Mapped[str | None] = mapped_column(String(255))
 
     def __repr__(self) -> str:

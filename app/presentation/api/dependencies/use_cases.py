@@ -9,12 +9,16 @@ from app.domain.repositories.finance_repository import (
     CategoryRepository,
     MovementRepository,
 )
-from app.domain.repositories.work_repository import WorkSessionRepository
+from app.domain.repositories.work_repository import (
+    WorkPreferencesRepository,
+    WorkSessionRepository,
+)
 from app.presentation.api.dependencies.repositories import (
     get_account_repository,
     get_category_repository,
     get_email_repository,
     get_movement_repository,
+    get_work_preferences_repository,
     get_work_session_repository,
 )
 
@@ -41,5 +45,8 @@ def get_track_work_use_case(
     work_session_repository: WorkSessionRepository = Depends(
         get_work_session_repository,
     ),
+    work_preferences_repository: WorkPreferencesRepository = Depends(
+        get_work_preferences_repository,
+    ),
 ) -> TrackWorkUseCase:
-    return TrackWorkUseCase(work_session_repository)
+    return TrackWorkUseCase(work_session_repository, work_preferences_repository)

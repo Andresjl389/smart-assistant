@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from uuid import UUID
 
-from app.domain.entities.work import WorkSession
+from app.domain.entities.work import WorkPreferences, WorkSession
 
 
 class WorkSessionRepository(ABC):
@@ -42,5 +42,29 @@ class WorkSessionRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def find_overlapping(
+        self,
+        started_at: datetime,
+        ended_at: datetime | None,
+        exclude_id: UUID | None = None,
+    ) -> WorkSession | None:
+        """Devuelve una jornada que se cruce con el intervalo dado, si existe.
+
+        `ended_at=None` representa una jornada abierta (sin fin).
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     async def delete(self, session_id: UUID) -> bool:
+        raise NotImplementedError
+
+
+class WorkPreferencesRepository(ABC):
+
+    @abstractmethod
+    async def get(self) -> WorkPreferences | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def save(self, preferences: WorkPreferences) -> WorkPreferences:
         raise NotImplementedError
